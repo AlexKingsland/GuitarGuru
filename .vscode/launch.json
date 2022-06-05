@@ -5,7 +5,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "pyaudio",
+			"name": "main",
 			"type": "python",
 			"request": "launch",
 			"program": "sandbox/main.py",

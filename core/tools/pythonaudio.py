@@ -1,5 +1,6 @@
 import pyaudio
 import numpy as np
+from core.tools.buffer import AudioBuffer
 
 class PyAudio():
     def __init__(self,verbose=True):
@@ -17,7 +18,6 @@ class PyAudio():
         return values for a single chunk
         """
         data = np.frombuffer(self.input_stream.read(chunk),dtype=np.int16)
-        #print(data)
         return data
 
     def stream_start(self,rate,chunk):

@@ -1,13 +1,13 @@
-import numpy as np
 import time
+import numpy as np
 import matplotlib.pyplot as plt
-from services.pythonaudio import PyAudio
+from core.utils.analysis import AnalyzeAudioStream as aas
 
 
 class AudioBuffer():
-    def __init__(self,pyaudio_client: PyAudio,chunk=4096,resolution=44100,buffer_length=2,verbose=True):
+    def __init__(self,pyaudio_client,chunk=4096,resolution=44100,buffer_length=2,verbose=True): # pylint: disable=too-many-arguments
         """
-        Instantiate audio buffer as a moving window of datapoints, that append and remove streamed 
+        Instantiate audio buffer as a moving window of datapoints, that append and remove streamed
         chunks retrieved from pyaudio lib handler
         """
         self.pyaudio_client=pyaudio_client
@@ -34,7 +34,9 @@ class AudioBuffer():
     def buffer_add(self):
         """add a single chunk to the tape."""
         self.buffer[:-self.chunk]=self.buffer[self.chunk:]
-        self.buffer[-self.chunk:]=self.pyaudio_client.stream_read(self.chunk)
+        data_chunk=self.pyaudio_client.stream_read(self.chunk)
+        self.buffer[-self.chunk:]=data_chunk
+        return data_chunk
 
     def buffer_flush(self):
         """completely fill tape with new data."""
@@ -45,7 +47,7 @@ class AudioBuffer():
             self.buffer_add()
 
     def stream_to_buffer_and_plot(self,interval=.25):
-        """ Listen to input stream, append/remove from tape, plot whats recorded on tape """
+        """ Listen to input stream, append/remove from buffer, plot whats recorded on buffer """
         start_time=0
         try:
             while True:
@@ -53,6 +55,20 @@ class AudioBuffer():
                 if (time.time()-start_time)>interval:
                     start_time=time.time()
                     self.buffer_plot(None)
+        except: # pylint: disable=bare-except
+            print("Error in stream.... closing now")
+            return
+
+    def stream_to_buffer_and_get_freq(self,interval=.25):
+        """ Listen to input stream, append/remove from buffer, get frequency """
+        start_time=0
+        try:
+            while True:
+                data_chunk = self.buffer_add()
+                if (time.time()-start_time)>interval:
+                    start_time=time.time()
+                    freq = aas.get_frequency(data_chunk,self.chunk,self.resolution)
+                    print(f"Frequency: {freq}")
         except: # pylint: disable=bare-except
             print("Error in stream.... closing now")
             return
